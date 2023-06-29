@@ -512,6 +512,12 @@ then
   HOMEBREW_NIX_STORE="$(${HOMEBREW_NIX_INSTANTIATE} --eval -E 'builtins.storeDir' | sed 's/"//g')"
 fi
 
+if check-in-nix-store "${HOMEBREW_CORE_REPOSITORY}"
+then
+  # Use the homebrew-core tap pinned by Nix
+  export HOMEBREW_NO_INSTALL_FROM_API=1
+fi
+
 # TODO: bump version when new macOS is released or announced
 # and also update references in docs/Installation.md,
 # https://github.com/Homebrew/install/blob/HEAD/install.sh and
