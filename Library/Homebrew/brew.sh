@@ -242,6 +242,29 @@ check-array-membership() {
   fi
 }
 
+check-in-nix-store() {
+  # /nix/store/anything -> inside
+  # /nix/store/.../link-to-outside-store -> inside
+  # ./result-link-into-store -> inside
+
+  [[ -n "${HOMEBREW_NIX_STORE}" ]] || return 1
+  [[ "$1" != "${HOMEBREW_NIX_STORE}"* ]] || return 0
+
+  if [[ -e "$1" ]]
+  then
+    path="$(readlink -f $1)"
+  else
+    path="$1"
+  fi
+
+  if [[ "${path}" == "${HOMEBREW_NIX_STORE}"* ]]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 # Let user know we're still updating Homebrew if brew update --auto-update
 # exceeds 3 seconds.
 auto-update-timer() {
@@ -482,6 +505,13 @@ case "$*" in
     ;;
 esac
 
+# Detect Nix installation
+HOMEBREW_NIX_INSTANTIATE="$(PATH=${HOMEBREW_PATH} which nix-instantiate)"
+if [[ -z "${HOMEBREW_NIX_STORE}" && -n "${HOMEBREW_NIX_INSTANTIATE}" ]]
+then
+  HOMEBREW_NIX_STORE="$(${HOMEBREW_NIX_INSTANTIATE} --eval -E 'builtins.storeDir' | sed 's/"//g')"
+fi
+
 # TODO: bump version when new macOS is released or announced
 # and also update references in docs/Installation.md,
 # https://github.com/Homebrew/install/blob/HEAD/install.sh and
@@ -714,6 +744,7 @@ export HOMEBREW_LOGS
 export HOMEBREW_DEFAULT_TEMP
 export HOMEBREW_TEMP
 export HOMEBREW_CELLAR
+export HOMEBREW_NIX_STORE
 export HOMEBREW_SYSTEM
 export HOMEBREW_SYSTEM_CA_CERTIFICATES_TOO_OLD
 export HOMEBREW_CURL
