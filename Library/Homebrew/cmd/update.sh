@@ -69,6 +69,10 @@ git_init_if_necessary() {
   fi
 
   [[ -d "${HOMEBREW_CORE_REPOSITORY}" ]] || return
+  if check-in-nix-store "${HOMEBREW_CORE_REPOSITORY}"
+  then
+    return
+  fi
   safe_cd "${HOMEBREW_CORE_REPOSITORY}"
   if [[ ! -d ".git" ]]
   then
@@ -589,6 +593,11 @@ EOS
 
     [[ -d "${DIR}/.git" ]] || continue
     cd "${DIR}" || continue
+
+    if check-in-nix-store "${DIR}"
+    then
+      continue
+    fi
 
     if [[ "${DIR}" = "${HOMEBREW_REPOSITORY}" && "${HOMEBREW_REPOSITORY}" = "${HOMEBREW_PREFIX}" ]]
     then
